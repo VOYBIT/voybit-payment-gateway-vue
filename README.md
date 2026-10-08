@@ -5,7 +5,7 @@ Use Voybit hosted checkout in a Vue 3 web app without exposing merchant secrets.
 ## Install
 
 ```bash
-npm install github:VOYBIT/voybit-payment-gateway-vue#v0.2.0
+npm install github:VOYBIT/voybit-payment-gateway-vue#v0.2.1
 ```
 
 The package is installed directly from GitHub and is not published to npm.
@@ -28,7 +28,7 @@ const response = await fetch(
     headers: {
       'Content-Type': 'application/json',
       'X-Voybit-Api-Key': process.env.VOYBIT_API_KEY,
-      'Idempotency-Key': `order:${order.id}`,
+      'Idempotency-Key': `checkout:order:${order.id}`,
     },
     body: JSON.stringify({
       fiat_amount: order.total,
