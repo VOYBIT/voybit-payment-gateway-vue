@@ -4,8 +4,10 @@ export class CheckoutError extends Error {}
 
 export interface CheckoutStatus {
   publicId: string
+  checkoutState: 'select_asset' | 'payment'
   status: string
   checkoutUrl: string
+  requiresPayerAction: boolean
   confirmed: boolean
 }
 

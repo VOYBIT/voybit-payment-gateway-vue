@@ -37,11 +37,31 @@ test('returns only the public checkout status fields', () => {
 
   assert.deepEqual(status, {
     publicId: id,
+    checkoutState: 'payment',
     status: 'pending',
     checkoutUrl: `https://voybit.com/pay/${id}`,
+    requiresPayerAction: false,
     confirmed: false,
   })
   assert.equal(JSON.stringify(status).includes('private-payment-address'), false)
+})
+
+test('reports buyer-choice checkout before an asset is selected', () => {
+  const status = parseStatus(JSON.stringify({
+    checkout_state: 'select_asset',
+    public_id: id,
+    assets: [{ id: 'private-asset-id', asset: 'USDC', network: 'base' }],
+  }), id)
+
+  assert.deepEqual(status, {
+    publicId: id,
+    checkoutState: 'select_asset',
+    status: 'awaiting_payer',
+    checkoutUrl: `https://voybit.com/pay/${id}`,
+    requiresPayerAction: true,
+    confirmed: false,
+  })
+  assert.equal(JSON.stringify(status).includes('private-asset-id'), false)
 })
 
 test('rejects a status response for a different checkout', () => {

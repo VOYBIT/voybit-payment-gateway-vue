@@ -1,7 +1,7 @@
 {
   "name": "voybit-payment-gateway-vue",
-  "version": "0.1.0",
-  "description": "Open a Voybit checkout safely from a Vue 3 app.",
+  "version": "0.2.0",
+  "description": "Open buyer-choice Voybit hosted checkout safely from a Vue 3 app.",
   "license": "MIT",
   "type": "module",
   "exports": {

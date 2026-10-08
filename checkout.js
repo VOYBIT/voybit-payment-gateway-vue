@@ -38,7 +38,7 @@ export function parseStatus(body, requestedPublicId) {
     }
   }
 
-  if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded) || typeof decoded.status !== 'string') {
+  if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) {
     throw new CheckoutError('checkout status was not JSON')
   }
 
@@ -58,11 +58,23 @@ export function parseStatus(body, requestedPublicId) {
     throw new CheckoutError('checkout status was not JSON')
   }
 
+  const checkoutState = decoded.checkout_state === 'select_asset' ? 'select_asset' : 'payment'
+  const status = typeof decoded.status === 'string'
+    ? decoded.status
+    : checkoutState === 'select_asset'
+      ? 'awaiting_payer'
+      : ''
+  if (!status) {
+    throw new CheckoutError('checkout status was not JSON')
+  }
+
   return {
     publicId,
-    status: decoded.status,
+    checkoutState,
+    status,
     checkoutUrl: checkoutUrl(publicId),
-    confirmed: decoded.status === 'paid' || decoded.status === 'overpaid',
+    requiresPayerAction: checkoutState === 'select_asset',
+    confirmed: status === 'paid' || status === 'overpaid',
   }
 }
 

@@ -5,21 +5,46 @@ Use Voybit hosted checkout in a Vue 3 web app without exposing merchant secrets.
 ## Install
 
 ```bash
-npm install github:VOYBIT/voybit-payment-gateway-vue
+npm install github:VOYBIT/voybit-payment-gateway-vue#v0.2.0
 ```
 
 The package is installed directly from GitHub and is not published to npm.
 
 ## Create the checkout on your server
 
-Create a gateway and secret key in the [Voybit dashboard](https://dashboard.voybit.com). Your server—not Vue—must:
+Create a gateway in the [Voybit dashboard](https://dashboard.voybit.com), enable every asset customers may use, and create a secret key bound to that gateway. Your server—not Vue—must:
 
 1. Validate the signed-in customer and order.
-2. Choose or validate the payment asset.
-3. Create the payment with its `X-Voybit-Api-Key`.
-4. Return only the resulting `checkout_url` to the browser.
+2. Create a checkout session with the order's fiat amount and currency.
+3. Return only the resulting `checkout_url` to the browser.
 
 Never include an API key or webhook secret in Vue source, environment variables bundled by Vite, or browser storage.
+
+```js
+const response = await fetch(
+  'https://api.voybit.com/api/v1/gateway/checkout-sessions',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Voybit-Api-Key': process.env.VOYBIT_API_KEY,
+      'Idempotency-Key': `order:${order.id}`,
+    },
+    body: JSON.stringify({
+      fiat_amount: order.total,
+      fiat_currency: order.currency,
+      description: `Order ${order.id}`,
+      metadata: { order_id: String(order.id) },
+    }),
+  },
+)
+
+if (!response.ok) throw new Error('Voybit checkout could not be created')
+const session = await response.json()
+// Send only session.checkout_url to the Vue app.
+```
+
+Do not send `asset_id` or `crypto_amount`. On the hosted page, the customer chooses from assets enabled on that gateway, sees a live quote, and confirms it before Voybit creates the payment address and QR.
 
 See [`examples/CheckoutButton.vue`](examples/CheckoutButton.vue) for a complete button that calls a same-origin backend route and opens the returned checkout.
 
@@ -43,6 +68,10 @@ defineProps({ checkoutUrl: { type: String, required: true } })
 
 ## Payment status
 
-`checkoutStatus(publicId)` can refresh status shown on screen. A `confirmed` value means the public status is `paid` or `overpaid`; it must not fulfil an order.
+`checkoutStatus(publicId)` can refresh status shown on screen:
 
-Fulfil orders only after your server verifies a Voybit webhook. Peer dependency: Vue 3.3 or newer.
+- `requiresPayerAction` is `true` while the customer still needs to enter or select checkout details.
+- `checkoutState` is `select_asset` before confirmation and `payment` afterward.
+- `confirmed` is `true` only when the public payment status is `paid` or `overpaid`.
+
+These values are display-only. Fulfil orders only after your server verifies a Voybit webhook. Peer dependency: Vue 3.3 or newer.

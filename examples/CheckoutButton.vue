@@ -17,7 +17,8 @@ async function startCheckout() {
   error.value = ''
 
   try {
-    // This same-origin server route owns the amount, asset choice, and API key.
+    // This server route owns the order amount and API key. The customer chooses
+    // one of the gateway's enabled assets on Voybit hosted checkout.
     const response = await fetch(`/api/orders/${encodeURIComponent(props.orderId)}/voybit-checkout`, {
       method: 'POST',
       credentials: 'same-origin',
